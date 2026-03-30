@@ -1,10 +1,12 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase,create_session
-
-url = "postgresql://chinmay:2007@localhost:5432/fastapi_db"
+from sqlalchemy.orm import DeclarativeBase,sessionmaker
+from apps.database import Base
+url = "postgresql://chinmay:2007@localhost:5432/restaurant_db"
 engine = create_engine(url,echo=True)
 
-SessionLocal = create_session(bind=engine)
+SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+
+Base.metadata.create_all(bind=engine)
 
 class Base(DeclarativeBase):
     pass

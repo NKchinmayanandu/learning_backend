@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from apps.utils.deps import get_current_user
+from apps.models import User
 
 from apps.schemas import (
     RestaurantCreate,
@@ -19,7 +21,8 @@ def get_all_restaurants(
     limit: int = 10,
     offset: int = 0,
     name: str | None = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user : User = Depends(get_current_user)
 ):
     query = db.query(Restaurant)
 
@@ -32,13 +35,15 @@ def get_all_restaurants(
 
 # 🔹 Get all foods
 @router.get("/foods", response_model=list[FoodResponse])
-def get_all_food(db: Session = Depends(get_db)):
+def get_all_food(db: Session = Depends(get_db),
+                 current_user : User = Depends(get_current_user)):
     return db.query(Food).all()
 
 
 # 🔹 Get foods of a specific restaurant
 @router.get("/{id}/foods", response_model=list[FoodResponse])
-def get_food_restaurant(id: int, db: Session = Depends(get_db)):
+def get_food_restaurant(id: int, db: Session = Depends(get_db)
+                        ,current_user : User = Depends(get_current_user)):
     restaurant = db.query(Restaurant).filter(Restaurant.id == id).first()
 
     if not restaurant:
@@ -49,7 +54,8 @@ def get_food_restaurant(id: int, db: Session = Depends(get_db)):
 
 # 🔹 Create restaurant
 @router.post("/", response_model=RestaurantResponse)
-def add_restaurant(data: RestaurantCreate, db: Session = Depends(get_db)):
+def add_restaurant(data: RestaurantCreate, db: Session = Depends(get_db),
+                   current_user : User = Depends(get_current_user)):
     new_restaurant = Restaurant(name=data.name)
 
     db.add(new_restaurant)
@@ -61,7 +67,8 @@ def add_restaurant(data: RestaurantCreate, db: Session = Depends(get_db)):
 
 # 🔹 Create food
 @router.post("/foods", response_model=FoodResponse)
-def add_foods(data: FoodCreate, db: Session = Depends(get_db)):
+def add_foods(data: FoodCreate, db: Session = Depends(get_db),
+              current_user : User = Depends(get_current_user)):
     # check if restaurant exists
     restaurant = db.query(Restaurant).filter(
         Restaurant.id == data.restaurant_id
@@ -73,7 +80,7 @@ def add_foods(data: FoodCreate, db: Session = Depends(get_db)):
     new_food = Food(
         name=data.name,
         price=data.price,
-        restaurant_id=data.restaurant_id  # ✅ fixed
+        restaurant_id=data.restaurant_id  
     )
 
     db.add(new_food)
@@ -85,7 +92,8 @@ def add_foods(data: FoodCreate, db: Session = Depends(get_db)):
 
 # 🔹 Get restaurants by food name
 @router.get("/food", response_model=list[RestaurantResponse])
-def get_restaurant_food(name: str, db: Session = Depends(get_db)):
+def get_restaurant_food(name: str, db: Session = Depends(get_db),
+                        current_user : User = Depends(get_current_user)):
     foods = db.query(Food).filter(Food.name == name).all()
 
     if not foods:
