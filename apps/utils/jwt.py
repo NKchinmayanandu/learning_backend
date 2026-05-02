@@ -1,11 +1,14 @@
+from datetime import timedelta
 from jose import jwt
-from datetime import datetime,timedelta
+from datetime import datetime,timezone,timedelta
 
-SECERT_KEY = "secret"
-ALGORITHM = "HS256"
+from apps.config import settings
+
+SECERT_KEY = settings.SECRET_KEY
+ALGORITHM = settings.ALGORITHM
 
 def create_token(data:dict):
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(hours=1)
-    to_encode.update(expire)
-    return jwt.encode(to_encode,secret_key = SECERT_KEY,algorithm=ALGORITHM)
+    expire = datetime.now(timezone.utc) + timedelta(hours=1)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode,SECERT_KEY,algorithm=ALGORITHM)

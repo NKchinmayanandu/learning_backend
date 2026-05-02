@@ -23,7 +23,7 @@ def get_all_restaurants(
     name: str | None = None,
     db: Session = Depends(get_db),
     current_user : User = Depends(get_current_user)
-):
+):  
     query = db.query(Restaurant)
 
     if name:
@@ -56,7 +56,9 @@ def get_food_restaurant(id: int, db: Session = Depends(get_db)
 @router.post("/", response_model=RestaurantResponse)
 def add_restaurant(data: RestaurantCreate, db: Session = Depends(get_db),
                    current_user : User = Depends(get_current_user)):
-    new_restaurant = Restaurant(name=data.name)
+    if current_user.role != "owner":
+        raise HTTPException(status_code=403, detail="Only owners can create restaurants")
+    new_restaurant = Restaurant(name=data.name, user_id=current_user.id)
 
     db.add(new_restaurant)
     db.commit()
@@ -69,14 +71,14 @@ def add_restaurant(data: RestaurantCreate, db: Session = Depends(get_db),
 @router.post("/foods", response_model=FoodResponse)
 def add_foods(data: FoodCreate, db: Session = Depends(get_db),
               current_user : User = Depends(get_current_user)):
-    # check if restaurant exists
     restaurant = db.query(Restaurant).filter(
         Restaurant.id == data.restaurant_id
     ).first()
 
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant not found")
-
+    if restaurant.user_id != current_user.id:
+        raise HTTPException(status_code=403,detail="Not Allowed")
     new_food = Food(
         name=data.name,
         price=data.price,
@@ -100,3 +102,17 @@ def get_restaurant_food(name: str, db: Session = Depends(get_db),
         raise HTTPException(status_code=404, detail="Food not found")
 
     return [food.restaurant for food in foods]
+
+@router.delete("/{id}")
+def delete_restaurant(id: int, db: Session = Depends(get_db),
+                      current_user: User = Depends(get_current_user)):
+    restaurant = db.query(Restaurant).filter(Restaurant.id == id).first()
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="restaurant not found")
+    if restaurant.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="not allowed")
+    
+    db.delete(restaurant)
+    db.commit()
+
+    return {"message": "restaurant deleted"}

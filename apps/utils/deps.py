@@ -4,7 +4,7 @@ from jose import jwt
 from sqlalchemy.orm import Session
 from apps.database import get_db
 from apps.models import User
-from apps.utils.jwt import SECERT_KEY,ALGORITHM
+from apps.utils.jwt import SECERT_KEY,ALGORITHM    
 
 outh2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -14,7 +14,7 @@ def get_current_user(
 ):
     try:
         payload = jwt.decode(token,SECERT_KEY,ALGORITHM)
-        user_id = payload.get(user_id)
+        user_id = payload.get("user_id")
     except:
         raise HTTPException(status_code=400,detail="invalid token payload")
     user = db.query(User).filter(User.id == user_id).first()

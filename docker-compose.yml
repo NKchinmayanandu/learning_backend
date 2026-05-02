@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: restaurant_db
+    environment:
+      POSTGRES_USER: chinmay
+      POSTGRES_PASSWORD: 2007
+      POSTGRES_DB: restaurant_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: learning_backend_app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://chinmay:2007@db:5432/restaurant_db
+      - SECRET_KEY=13dadce1db53faf8fe1ee11e716a09550ed15f141dc19c5e05c522c97c8c5dd6
+      - ALGORITHM=HS256
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

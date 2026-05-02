@@ -1,8 +1,9 @@
 from pydantic import BaseModel,EmailStr
-
+from pydantic import ConfigDict
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
+    role : str = "user"
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -11,9 +12,7 @@ class UserLogin(BaseModel):
 class UserResponse(BaseModel):
     id: int
     email: str
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class FoodCreate(BaseModel):
     name : str
@@ -25,8 +24,7 @@ class FoodResponse(BaseModel):
     name : str
     restaurant_id : int
     price : float
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class RestaurantCreate(BaseModel):
     name : str
@@ -35,6 +33,5 @@ class RestaurantResponse(BaseModel):
     id : int 
     name : str
     foods : list[FoodResponse] = []
-    class Config:
-        from_attributes = True
-        
+    model_config = ConfigDict(from_attributes=True)
+

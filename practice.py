@@ -1,9 +1,7 @@
-def gen():
-    print("start")
-    yield 5
-    print("end")
-
-
-g = gen()
-next(g)
-next(g)
+nums = [1,2,3,1]
+def duplicate():
+    for i in range (len(nums)):
+        for j in range (i+1,len(nums)): 
+            if nums[i] == nums[j]:
+                return True
+print(duplicate())           
