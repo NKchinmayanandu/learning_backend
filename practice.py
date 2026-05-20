@@ -1,6 +1,6 @@
 temperatures = [73,74,75,71,69,72,76,73]
 answers = []
-l = [0]*len(temperatures)
+l = []
 for i,num in enumerate(temperatures):
     while answers:
         if num > temperatures[answers[-1]]:

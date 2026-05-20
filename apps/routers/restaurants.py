@@ -13,6 +13,10 @@ from apps.models import Restaurant, Food
 from apps.database import get_db
 from sqlalchemy.orm import joinedload
 from apps.redis import redis_client
+from apps.services.restaurant_services import (
+    get_all_restaurants_service,
+    get_restaurant_id
+)
 router = APIRouter(prefix="/restaurant", tags=["restaurants"])
 
 
@@ -28,6 +32,12 @@ def get_all_restaurants(
         limit=limit,
         offset=offset,
         name=name,
+        db=db
+    )
+@router.get("/{id}")
+def get_restaurant_through_id(id:int,db:Session=Depends(get_db)):
+    return get_restaurant_id(
+        id=id,
         db=db
     )
 
@@ -94,5 +104,5 @@ def delete_restaurant(id: int, db: Session = Depends(get_db),
     
     db.delete(restaurant)
     db.commit()
-    redis_client.flushdb()
+    redis_client.delete(f"restaurant:{id}")
     return {"message": "restaurant deleted"}
