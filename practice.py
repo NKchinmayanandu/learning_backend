@@ -1,7 +1,12 @@
-nums = [1,2,3,1]
-def duplicate():
-    for i in range (len(nums)):
-        for j in range (i+1,len(nums)): 
-            if nums[i] == nums[j]:
-                return True
-print(duplicate())           
+temperatures = [73,74,75,71,69,72,76,73]
+answers = []
+l = [0]*len(temperatures)
+for i,num in enumerate(temperatures):
+    while answers:
+        if num > temperatures[answers[-1]]:
+            l.append(i-answers[-1])
+            answers.pop(-1)
+        else:
+            break
+    answers.append(i)
+print(l)   

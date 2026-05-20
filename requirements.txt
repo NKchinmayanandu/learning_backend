@@ -20,3 +20,4 @@ pytest
 psycopg2-binary
 pydantic-settings
 email-validator
+redis==7.4.0

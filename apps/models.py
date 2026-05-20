@@ -15,7 +15,7 @@ class User(Base):
 class Restaurant(Base):
     __tablename__ = "restaurants"
     
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True)  
     name = Column(String,nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="restaurants")

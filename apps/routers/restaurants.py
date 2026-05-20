@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from apps.utils.deps import get_current_user
 from apps.models import User
-
+from apps.services.restaurant_services import get_all_restaurants_service
 from apps.schemas import (
     RestaurantCreate,
     RestaurantResponse,
@@ -11,7 +11,8 @@ from apps.schemas import (
 )
 from apps.models import Restaurant, Food
 from apps.database import get_db
-
+from sqlalchemy.orm import joinedload
+from apps.redis import redis_client
 router = APIRouter(prefix="/restaurant", tags=["restaurants"])
 
 
@@ -21,35 +22,15 @@ def get_all_restaurants(
     limit: int = 10,
     offset: int = 0,
     name: str | None = None,
-    db: Session = Depends(get_db),
-    current_user : User = Depends(get_current_user)
+    db: Session = Depends(get_db),  
 ):  
-    query = db.query(Restaurant)
+    return get_all_restaurants_service(
+        limit=limit,
+        offset=offset,
+        name=name,
+        db=db
+    )
 
-    if name:
-        query = query.filter(Restaurant.name.ilike(f"%{name}%"))
-
-    restaurants = query.offset(offset).limit(limit).all()
-    return restaurants
-
-
-# 🔹 Get all foods
-@router.get("/foods", response_model=list[FoodResponse])
-def get_all_food(db: Session = Depends(get_db),
-                 current_user : User = Depends(get_current_user)):
-    return db.query(Food).all()
-
-
-# 🔹 Get foods of a specific restaurant
-@router.get("/{id}/foods", response_model=list[FoodResponse])
-def get_food_restaurant(id: int, db: Session = Depends(get_db)
-                        ,current_user : User = Depends(get_current_user)):
-    restaurant = db.query(Restaurant).filter(Restaurant.id == id).first()
-
-    if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found")
-
-    return restaurant.foods
 
 
 # 🔹 Create restaurant
@@ -88,20 +69,19 @@ def add_foods(data: FoodCreate, db: Session = Depends(get_db),
     db.add(new_food)
     db.commit()
     db.refresh(new_food)
-
+    redis_client.flushdb()
     return new_food
 
 
 # 🔹 Get restaurants by food name
 @router.get("/food", response_model=list[RestaurantResponse])
-def get_restaurant_food(name: str, db: Session = Depends(get_db),
-                        current_user : User = Depends(get_current_user)):
-    foods = db.query(Food).filter(Food.name == name).all()
+def get_restaurant_food(name: str, db: Session = Depends(get_db)):
+    foods = db.query(Food).options(joinedload(Food.restaurant)).filter(Food.name==name).all()
 
     if not foods:
         raise HTTPException(status_code=404, detail="Food not found")
 
-    return [food.restaurant for food in foods]
+    return [foods.restaurant]
 
 @router.delete("/{id}")
 def delete_restaurant(id: int, db: Session = Depends(get_db),
@@ -114,5 +94,5 @@ def delete_restaurant(id: int, db: Session = Depends(get_db),
     
     db.delete(restaurant)
     db.commit()
-
+    redis_client.flushdb()
     return {"message": "restaurant deleted"}
