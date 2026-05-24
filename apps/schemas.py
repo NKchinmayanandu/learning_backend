@@ -1,5 +1,6 @@
 from pydantic import BaseModel,EmailStr
 from pydantic import ConfigDict
+from typing import Optional
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
@@ -35,3 +36,10 @@ class RestaurantResponse(BaseModel):
     foods : list[FoodResponse] = []
     model_config = ConfigDict(from_attributes=True)
 
+class UpdateRestaurant(BaseModel):
+    name:Optional[str]=None
+
+class TokenResponse(BaseModel):
+    access_token:str
+    token_type : str
+    

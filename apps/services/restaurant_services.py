@@ -3,7 +3,7 @@ from apps.redis import redis_client
 from sqlalchemy.orm import Session
 
 from apps.models import Restaurant
-
+from apps.utils.cache import get_cached,set_cache
 def get_all_restaurants_service(
         db:Session,
         limit:int,
@@ -11,10 +11,12 @@ def get_all_restaurants_service(
         name:str|None
 ):
     cache_key = f"restaurants:{limit}:{offset}:{name}"
-    cached_restaurants = redis_client.get(cache_key)
-    if cached_restaurants:
+    #get cached by the cache file
+    cached_data = get_cached(cache_key)
+    if cached_data:
         print("from cache")
-        return json.loads(cached_restaurants)
+        return cached_data
+    
     print("from db")
     query = db.query(Restaurant)
     if name:
@@ -28,19 +30,16 @@ def get_all_restaurants_service(
             "name":restaurant.name,
             "user_id":restaurant.user_id
         })
+    #set cache key for to get cached by the redis for the next time
+    set_cache(cache_key,restaurant_data)
 
-    redis_client.set(
-        cache_key,
-        json.dumps(restaurant_data),
-        ex=60
-    )
     return restaurant_data
 def get_restaurant_id(id:int,db:Session):
     cache_key = f"restaurant:{id}"
-    cached_restaurants = redis_client.get(cache_key)
-    if cached_restaurants:
+    cached_data = get_cached(cache_key)
+    if cached_data:
         print("from cache")
-        return json.loads(cached_restaurants)
+        return cached_data
     print("from db")
     restaurant = db.query(Restaurant).filter(Restaurant.id == id).first()
     if not restaurant:
@@ -50,10 +49,6 @@ def get_restaurant_id(id:int,db:Session):
         "name" : restaurant.name,
         "user_id" : restaurant.user_id
     }
-    redis_client.set(
-        cache_key,
-        json.dumps(restaurant_data),
-        ex=60
-    )
+    set_cache(cache_key,restaurant_data)
 
     return restaurant_data

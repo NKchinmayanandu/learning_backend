@@ -1,12 +1,17 @@
-temperatures = [73,74,75,71,69,72,76,73]
-answers = []
-l = []
-for i,num in enumerate(temperatures):
-    while answers:
-        if num > temperatures[answers[-1]]:
-            l.append(i-answers[-1])
-            answers.pop(-1)
-        else:
-            break
-    answers.append(i)
-print(l)   
+import asyncio
+import httpx
+
+async def fetch(url):
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
+
+        print(f"{url} -> {response.status_code}")
+
+async def main():
+    await asyncio.gather(
+        fetch("https://google.com"),
+        fetch("https://github.com"),
+        fetch("https://python.org")
+    )
+
+asyncio.run(main())
