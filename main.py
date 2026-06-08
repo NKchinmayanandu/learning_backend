@@ -1,7 +1,6 @@
-from apps.routers import restaurants,auth
 from fastapi import FastAPI
-from apps.database import Base,engine
-app = FastAPI()
-app.include_router(restaurants.router)
-app.include_router(auth.router)
+from apps.routers import restaurants, auth
 
+app = FastAPI(title="Restaurant Listing API")
+app.include_router(auth.router)
+app.include_router(restaurants.router)
