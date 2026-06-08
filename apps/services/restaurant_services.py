@@ -18,7 +18,7 @@ def get_all_restaurants_service(
         return cached_data
     
     print("from db")
-    query = db.query(Restaurant)
+    query = db.query(Restaurant).all()
     if name:
         query = query.filter(Restaurant.name.ilike(f"%{name}%"))
     restaurants = query.offset(offset).limit(limit).all()
@@ -35,20 +35,23 @@ def get_all_restaurants_service(
 
     return restaurant_data
 def get_restaurant_id(id:int,db:Session):
-    cache_key = f"restaurant:{id}"
+    cache_key = f"restaurant;{id}"
     cached_data = get_cached(cache_key)
     if cached_data:
         print("from cache")
-        return cached_data
+        return json.loads(cached_data)
     print("from db")
-    restaurant = db.query(Restaurant).filter(Restaurant.id == id).first()
-    if not restaurant:
-        return None
+    restaurant = db.query(Restaurant).filter(Restaurant.id==id).filter()
+    if restaurant is None:
+        return {"message":"restaurant does not exsit"}
     restaurant_data = {
-        "id" : restaurant.id,
-        "name" : restaurant.name,
-        "user_id" : restaurant.user_id
+        "id":restaurant.id,
+        "name":restaurant.name,
+        "user_id":restaurant.user_id
     }
-    set_cache(cache_key,restaurant_data)
-
+    set_cache(cache_key,
+              restaurant_data)
     return restaurant_data
+    
+
+    
